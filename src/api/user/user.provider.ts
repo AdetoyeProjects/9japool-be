@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserDocument } from './schema/user.schema';
 import { UtilService } from 'src/shared/services/utils.service';
 import { FileService } from 'src/shared/file/file.service';
 import DEFAULT_IMAGES from 'src/shared/constants/images.const';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UserProvider {
@@ -11,7 +12,7 @@ export class UserProvider {
       private readonly userService: UserService,
       private readonly utilService: UtilService,
       private readonly fileService: FileService,
-   ) {}
+   ) { }
 
    async getUser(user: UserDocument) {
       const data = await this.userService.getUser({ _id: user._id });
@@ -22,6 +23,29 @@ export class UserProvider {
          success: true,
          message: 'user info fetched',
          data: this.utilService.excludePassword(data),
+      };
+   }
+
+   async changePassword(changePasswordDto: ChangePasswordDto, userId: string) {
+      const user = await this.userService.getUser({ _id: userId });
+
+      const passwordMatch = await this.utilService.comparePassword(
+         changePasswordDto.oldPassword,
+         user.password,
+      );
+
+      if (!passwordMatch)
+         throw new BadRequestException('Old password is incorrect');
+
+      const hashedPassword = await this.utilService.hashPassword(
+         changePasswordDto.newPassword,
+      );
+      user.password = hashedPassword;
+      await user.save();
+
+      return {
+         success: true,
+         message: 'password changed',
       };
    }
 

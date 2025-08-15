@@ -5,7 +5,7 @@ import {
    HttpStatus,
    Post,
 } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
    RegisterDto,
@@ -21,6 +21,8 @@ export class AuthController {
 
    @Post('/signup')
    @IsPublic()
+   @HttpCode(HttpStatus.CREATED)
+   @ApiOperation({ summary: 'Create an account' })
    async onBoardPlayer(@Body() registerDto: RegisterDto) {
       const data = await this.authService.signUp(registerDto);
 
@@ -31,6 +33,7 @@ export class AuthController {
    @Post('/signin')
    @IsPublic()
    @HttpCode(HttpStatus.OK)
+   @ApiOperation({ summary: 'Log in to an existing account' })
    async signIn(@Body() signInDto: SignInDto) {
       const data = await this.authService.signIn(signInDto);
 
@@ -46,6 +49,7 @@ export class AuthController {
          properties: { refreshToken: { type: 'string' } },
       },
    })
+   @ApiOperation({ summary: 'Refresh Session' })
    async refreshSession(@Body('refreshToken') refreshToken: string) {
       const data = await this.authService.refreshSession(refreshToken);
 
