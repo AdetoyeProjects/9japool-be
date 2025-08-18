@@ -12,6 +12,8 @@ import {
 } from './dto/register.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { IsPublic } from 'src/shared/decorators/auth.decorators';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -39,6 +41,53 @@ export class AuthController {
 
       return data;
    }
+
+   @Post('/verify-email')
+   @IsPublic()
+   @HttpCode(HttpStatus.OK)
+   @ApiOperation({ summary: 'Verify email' })
+   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+      const data = await this.authService.verifyEmail(verifyEmailDto);
+
+      return data;
+   }
+
+   @Post('/verify-email/request')
+   @IsPublic()
+   @HttpCode(HttpStatus.OK)
+   @ApiBody({
+      schema: { type: 'object', properties: { email: { type: 'string' } } },
+   })
+   @ApiOperation({ summary: 'Request email verification' })
+   async requestVerificationEmail(@Body('email') email: string) {
+      const data = await this.authService.requestEmailVerificationLink(email);
+
+      return data;
+   }
+
+   @Post('/forgot-password')
+   @IsPublic()
+   @HttpCode(HttpStatus.OK)
+   @ApiBody({
+      schema: { type: 'object', properties: { email: { type: 'string' } } },
+   })
+   @ApiOperation({ summary: 'Request password reset' })
+   async forgotPassword(@Body('email') email: string) {
+      const data = await this.authService.forgotPassword(email);
+
+      return data;
+   }
+
+   @Post('/reset-password')
+   @HttpCode(HttpStatus.OK)
+   @IsPublic()
+   @ApiOperation({ summary: 'Reset password' })
+   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+      const data = await this.authService.resetPassword(resetPasswordDto);
+
+      return data;
+   }
+
 
    @Post('/session/refresh')
    @IsPublic()

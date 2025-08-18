@@ -21,7 +21,7 @@ import { join } from 'path';
                },
 
                defaults: {
-                  from: 'No Reply <noreply@bdmeds.com>',
+                  from: 'No Reply <noreply@9ja Pool.com>',
                },
 
                template: {
@@ -38,4 +38,4 @@ import { join } from 'path';
    providers: [MailService],
    exports: [MailService],
 })
-export class MailModule {}
+export class MailModule { }

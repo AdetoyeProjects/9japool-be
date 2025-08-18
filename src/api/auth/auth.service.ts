@@ -22,6 +22,8 @@ import { UserDocument } from '../user/schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtType } from './enums/jwt.enum';
 import { RoleNames } from '../user/enums';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Injectable()
 export class AuthService {
@@ -89,9 +91,28 @@ export class AuthService {
 
       const data = await this.utilService.excludePassword(user);
 
+      const token = await this.tokenService.findOrCreateToken({
+         email: user.email,
+         value: this.utilService.generateToken(),
+         type: TokenTypes.accountVerification,
+      });
+
+      const link = `${this.configService.get('FRONTEND_URL')}/account/verify?email=${token.email}&token=${token.value}`;
+
+
+      await this.mailService.sendMail({
+         to: user.email,
+         subject: '9ja Pool: Account Verification',
+         template: 'account-verification',
+         context: {
+            userName: user.userName,
+            link,
+         },
+      });
+
       return {
          success: true,
-         message: 'registration successful',
+         message: 'registration successful, account verification email sent',
          data
       };
    }
@@ -124,6 +145,120 @@ export class AuthService {
          success: true,
          message: 'sign in successful',
          data,
+      };
+   }
+
+   async verifyEmail(verifyEmailDto: VerifyEmailDto) {
+      const token = await this.tokenService.getToken({
+         email: verifyEmailDto.email,
+         value: verifyEmailDto.token,
+         type: TokenTypes.accountVerification,
+      });
+
+      if (!token)
+         throw new NotFoundException(
+            'Token is invalid, try to login to receive a new verification link',
+         );
+
+      await this.userService.updateUser(
+         { email: token.email },
+         { emailVerified: true },
+      );
+      await token.deleteOne();
+
+      return {
+         success: true,
+         message: 'Account Verified 😉',
+      };
+   }
+
+   async requestEmailVerificationLink(email: string) {
+      const user = await this.userService.getUser({ email });
+
+      if (!user)
+         throw new NotFoundException("User with this email doesn't exist");
+      if (user.emailVerified)
+         throw new NotFoundException('This account is already verified');
+
+      const token = await this.tokenService.findOrCreateToken({
+         email: user.email,
+         value: this.utilService.generateToken(),
+         type: TokenTypes.accountVerification,
+      });
+
+      const link = `${this.configService.get('FRONTEND_URL')}/account/verify?email=${token.email}&token=${token.value}`;
+
+      await this.mailService.sendMail({
+         to: user.email,
+         subject: '9ja Pool: Account Verification',
+         template: 'account-verification',
+         context: {
+            userName: user.userName,
+            link,
+         },
+      });
+
+      return {
+         success: true,
+         message: 'Verification Email Sent 🪁',
+      };
+   }
+
+   async forgotPassword(email: string) {
+      const user = await this.userService.getUser({ email });
+
+      if (!user)
+         throw new NotFoundException("User with this email doesn't exist");
+
+      const token = await this.tokenService.findOrCreateToken({
+         email,
+         type: TokenTypes.passwordReset,
+         value: this.utilService.generateToken(),
+      });
+
+      const link = `${this.configService.get('FRONTEND_URL')}/reset-password?email=${token.email}&token=${token.value}`;
+
+      await this.mailService.sendMail({
+         to: user.email,
+         subject: '9ja Pool: Password Reset Request',
+         template: 'forgot-password',
+         context: {
+            userName: user.userName,
+            link,
+         },
+      });
+
+      return {
+         success: true,
+         message: 'password reset link sent successfully',
+      };
+   }
+
+   async resetPassword(resetPasswordDto: ResetPasswordDto) {
+      const token = await this.tokenService.getToken({
+         type: TokenTypes.passwordReset,
+         value: resetPasswordDto.token,
+         email: resetPasswordDto.email,
+      });
+
+      if (!token)
+         throw new NotFoundException(
+            'password reset link is invalid or has expired',
+         );
+
+      const hashedPassword = await this.utilService.hashPassword(
+         resetPasswordDto.password,
+      );
+
+      await this.userService.updateUser(
+         { email: token.email },
+         { password: hashedPassword },
+      );
+      await token.deleteOne();
+
+      return {
+         success: true,
+         message: 'password reset successful',
       };
    }
 

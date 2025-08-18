@@ -4,13 +4,13 @@ import { SendMail } from './interfaces';
 
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(private readonly mailerService: MailerService) { }
 
   async sendMail(dto: SendMail) {
     const { to, template, context, subject } = dto;
     try {
       await this.mailerService.sendMail({
-        from: 'noreply@bdmeds.com',
+        from: 'noreply@9ja-pool.com',
         to,
         subject,
         template,

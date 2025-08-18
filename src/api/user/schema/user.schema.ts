@@ -24,7 +24,7 @@ export class User extends DbMixins {
    @Prop({ select: false })
    password?: string;
 
-   @Prop({ type: Boolean, default: true })
+   @Prop({ type: Boolean, default: false })
    emailVerified: boolean;
 
    @Prop({ type: String, default: DEFAULT_IMAGES.profilePicture })

@@ -75,7 +75,7 @@ button:hover {
       </head>
       <body>
       <section class="main-container" >
-        <h2>Welcome to 9ja Pool API 🏡</h2>
+        <h2>Welcome to 9ja Pool API 🎱</h2>
           <a href ="/api/docs"><button>View Documentation</button></a>
             </section>
             </body>
