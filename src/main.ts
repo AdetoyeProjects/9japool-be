@@ -46,6 +46,7 @@ async function bootstrap() {
       .setVersion('1.0.0')
       .addBearerAuth()
       .addServer('http://localhost:4000')
+      .addServer('https://ninejapool-be.onrender.com')
       .build();
 
    const swaggerDoc = SwaggerModule.createDocument(app, swaggerConfig);
