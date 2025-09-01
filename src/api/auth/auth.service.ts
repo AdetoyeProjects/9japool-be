@@ -83,19 +83,19 @@ export class AuthService {
 
       const data = await this.utilService.excludePassword(user);
 
-      const code = await this.tokenService.findOrCreateToken({
+      const { value: code } = await this.tokenService.findOrCreateToken({
          email: user.email,
          value: this.utilService.generateOtpCode().toString(),
          type: TokenTypes.accountVerification,
       });
+
 
       await this.mailService.sendMail({
          to: user.email,
          subject: '9ja Pool: Account Verification',
          template: 'account-verification',
          context: {
-            userName: user.userName,
-            code: code.value,
+            code,
          },
       });
 
@@ -169,7 +169,7 @@ export class AuthService {
       if (user.emailVerified)
          throw new NotFoundException('This account is already verified');
 
-      const code = await this.tokenService.findOrCreateToken({
+      const { value: code } = await this.tokenService.findOrCreateToken({
          email: user.email,
          value: this.utilService.generateOtpCode().toString(),
          type: TokenTypes.accountVerification,
@@ -180,8 +180,7 @@ export class AuthService {
          subject: '9ja Pool: Account Verification',
          template: 'account-verification',
          context: {
-            userName: user.userName,
-            code: code.value,
+            code,
          },
       });
 
@@ -198,7 +197,7 @@ export class AuthService {
          throw new NotFoundException("User with this email doesn't exist");
       }
 
-      const code = await this.tokenService.findOrCreateToken({
+      const { value: code } = await this.tokenService.findOrCreateToken({
          email,
          type: TokenTypes.passwordReset,
          value: this.utilService.generateOtpCode().toString(),
@@ -209,8 +208,7 @@ export class AuthService {
          subject: '9ja Pool: Password Reset Request',
          template: 'forgot-password',
          context: {
-            userName: user.userName,
-            code: code.value,
+            code,
          },
       });
 
