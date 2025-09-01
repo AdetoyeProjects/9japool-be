@@ -107,15 +107,7 @@ export class AuthService {
    }
 
    async signIn(signInDto: SignInDto) {
-      let user: UserDocument;
-
-      if (signInDto.email) {
-         user = await this.userService.getUser({ email: signInDto.email });
-      } else if (signInDto.userName) {
-         user = await this.userService.getUser({
-            userName: signInDto.userName,
-         });
-      }
+      const user = await this.userService.getUser({ email: signInDto.email });
 
       if (!user) throw new UnauthorizedException('Invalid login credentials');
 
