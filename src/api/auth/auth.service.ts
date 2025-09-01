@@ -95,7 +95,7 @@ export class AuthService {
          template: 'account-verification',
          context: {
             userName: user.userName,
-            code,
+            code: code.value,
          },
       });
 
@@ -181,7 +181,7 @@ export class AuthService {
          template: 'account-verification',
          context: {
             userName: user.userName,
-            code,
+            code: code.value,
          },
       });
 
@@ -210,7 +210,7 @@ export class AuthService {
          template: 'forgot-password',
          context: {
             userName: user.userName,
-            code,
+            code: code.value,
          },
       });
 
