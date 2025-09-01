@@ -21,7 +21,6 @@ import { SignInDto } from './dto/sign-in.dto';
 import { UserDocument } from '../user/schema/user.schema';
 import { JwtService } from '@nestjs/jwt';
 import { JwtType } from './enums/jwt.enum';
-import { RoleNames } from '../user/enums';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 
@@ -68,14 +67,7 @@ export class AuthService {
    }
 
    async signUp(signUpDto: RegisterDto) {
-      const userExists = await this.userService.getUser({
-         $or: [
-            {
-               email: signUpDto.email,
-            },
-            { userName: signUpDto.userName },
-         ],
-      });
+      const userExists = await this.userService.getUser({ email: signUpDto.email });
 
       if (userExists) {
          throw new BadRequestException(
@@ -91,14 +83,11 @@ export class AuthService {
 
       const data = await this.utilService.excludePassword(user);
 
-      const token = await this.tokenService.findOrCreateToken({
+      const code = await this.tokenService.findOrCreateToken({
          email: user.email,
-         value: this.utilService.generateToken(),
+         value: this.utilService.generateOtpCode().toString(),
          type: TokenTypes.accountVerification,
       });
-
-      const link = `${this.configService.get('FRONTEND_URL')}/account/verify?email=${token.email}&token=${token.value}`;
-
 
       await this.mailService.sendMail({
          to: user.email,
@@ -106,7 +95,7 @@ export class AuthService {
          template: 'account-verification',
          context: {
             userName: user.userName,
-            link,
+            code,
          },
       });
 
@@ -149,22 +138,22 @@ export class AuthService {
    }
 
    async verifyEmail(verifyEmailDto: VerifyEmailDto) {
-      const token = await this.tokenService.getToken({
+      const code = await this.tokenService.getToken({
          email: verifyEmailDto.email,
-         value: verifyEmailDto.token,
+         value: verifyEmailDto.code,
          type: TokenTypes.accountVerification,
       });
 
-      if (!token)
+      if (!code)
          throw new NotFoundException(
-            'Token is invalid, try to login to receive a new verification link',
+            'Code is invalid, try to request for a new verification code',
          );
 
       await this.userService.updateUser(
-         { email: token.email },
+         { email: code.email },
          { emailVerified: true },
       );
-      await token.deleteOne();
+      await code.deleteOne();
 
       return {
          success: true,
@@ -172,7 +161,7 @@ export class AuthService {
       };
    }
 
-   async requestEmailVerificationLink(email: string) {
+   async requestEmailVerificationCode(email: string) {
       const user = await this.userService.getUser({ email });
 
       if (!user)
@@ -180,13 +169,11 @@ export class AuthService {
       if (user.emailVerified)
          throw new NotFoundException('This account is already verified');
 
-      const token = await this.tokenService.findOrCreateToken({
+      const code = await this.tokenService.findOrCreateToken({
          email: user.email,
-         value: this.utilService.generateToken(),
+         value: this.utilService.generateOtpCode().toString(),
          type: TokenTypes.accountVerification,
       });
-
-      const link = `${this.configService.get('FRONTEND_URL')}/account/verify?email=${token.email}&token=${token.value}`;
 
       await this.mailService.sendMail({
          to: user.email,
@@ -194,7 +181,7 @@ export class AuthService {
          template: 'account-verification',
          context: {
             userName: user.userName,
-            link,
+            code,
          },
       });
 
@@ -207,16 +194,15 @@ export class AuthService {
    async forgotPassword(email: string) {
       const user = await this.userService.getUser({ email });
 
-      if (!user)
+      if (!user) {
          throw new NotFoundException("User with this email doesn't exist");
+      }
 
-      const token = await this.tokenService.findOrCreateToken({
+      const code = await this.tokenService.findOrCreateToken({
          email,
          type: TokenTypes.passwordReset,
-         value: this.utilService.generateToken(),
+         value: this.utilService.generateOtpCode().toString(),
       });
-
-      const link = `${this.configService.get('FRONTEND_URL')}/reset-password?email=${token.email}&token=${token.value}`;
 
       await this.mailService.sendMail({
          to: user.email,
@@ -224,13 +210,13 @@ export class AuthService {
          template: 'forgot-password',
          context: {
             userName: user.userName,
-            link,
+            code,
          },
       });
 
       return {
          success: true,
-         message: 'password reset link sent successfully',
+         message: 'password reset code sent successfully',
       };
    }
 

@@ -5,5 +5,5 @@ export class VerifyEmailDto {
   email: string;
 
   @IsString(false)
-  token: string;
+  code: string;
 }

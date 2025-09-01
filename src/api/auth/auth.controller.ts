@@ -60,7 +60,7 @@ export class AuthController {
    })
    @ApiOperation({ summary: 'Request email verification' })
    async requestVerificationEmail(@Body('email') email: string) {
-      const data = await this.authService.requestEmailVerificationLink(email);
+      const data = await this.authService.requestEmailVerificationCode(email);
 
       return data;
    }

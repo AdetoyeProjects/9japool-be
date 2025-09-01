@@ -6,12 +6,6 @@ export class RegisterDto {
    email: string;
 
    @IsString(false)
-   name: string;
-
-   @IsString(false)
-   userName: string;
-
-   @IsString(false)
    @MinLength(6, { message: 'Password must be at least 6 characters long' })
    password: string;
 

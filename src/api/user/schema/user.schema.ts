@@ -15,10 +15,10 @@ export class User extends DbMixins {
    })
    email: string;
 
-   @Prop({ required: true, index: true })
+   @Prop({ required: false, index: true })
    userName: string;
 
-   @Prop({ required: true })
+   @Prop({ required: false })
    name: string;
 
    @Prop({ select: false })

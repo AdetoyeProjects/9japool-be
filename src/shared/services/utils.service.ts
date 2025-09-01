@@ -7,7 +7,7 @@ import { ResolvePaginationQuery } from '../interfaces/pagination.interface';
 
 @Injectable()
 export class UtilService {
-   constructor(private readonly configService: ConfigService) {}
+   constructor(private readonly configService: ConfigService) { }
 
    async hashPassword(password: string) {
       const saltFactor = await bcrypt.genSalt(12);
@@ -22,6 +22,10 @@ export class UtilService {
 
    generateToken() {
       return crypto.randomBytes(32).toString('hex');
+   }
+
+   generateOtpCode() {
+      return crypto.randomInt(100000, 999999);
    }
 
    excludePassword(user: UserDocument) {
