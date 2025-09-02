@@ -8,10 +8,8 @@ import { SharedModule } from 'src/shared/shared.module';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
-// import { DoctorModule } from '../doctor/doctor.module';
-// import { PatientModule } from '../patient/patient.module';
+import { GoogleOAuthStrategy } from './strategies/google-oauth.strategy';
 
 @Module({
    imports: [
@@ -42,10 +40,8 @@ import { AuthGuard } from './guards/auth.guard';
       TokenModule,
       SharedModule,
       UserModule,
-      // DoctorModule,
-      // PatientModule,
    ],
-   providers: [AuthService, AuthGuard],
+   providers: [AuthService, AuthGuard, GoogleOAuthStrategy],
    controllers: [AuthController],
 })
-export class AuthModule {}
+export class AuthModule { }

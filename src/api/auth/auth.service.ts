@@ -129,6 +129,43 @@ export class AuthService {
       };
    }
 
+   async googleSignIn(googleUser: { email: string, firstName: string, lastName: string, profilePicture: string }) {
+      let user = await this.userService.getUser({ email: googleUser.email });
+
+      if (!user) {
+         user = await this.userService.createUser({ email: googleUser.email, profilePicture: googleUser.profilePicture });
+      }
+
+      const token = await this.tokenService.findOrCreateToken({
+         email: user.email,
+         value: this.utilService.generateOtpCode().toString(),
+         type: TokenTypes.accountVerification,
+      });
+
+      return {
+         success: true,
+         message: 'sign in successful',
+         data: token,
+      };
+   }
+
+   async signInWithToken(verifyEmailDto: VerifyEmailDto) {
+      await this.verifyEmail(verifyEmailDto);
+      const user: UserDocument = await this.userService.getUser({ email: verifyEmailDto.email });
+      if (!user) {
+         throw new NotFoundException('User does not exist');
+      }
+
+      const data = await this.auth(this.utilService.excludePassword(user));
+
+      return {
+         success: true,
+         message: 'sign in successful',
+         data,
+      };
+   }
+
+
    async verifyEmail(verifyEmailDto: VerifyEmailDto) {
       const code = await this.tokenService.getToken({
          email: verifyEmailDto.email,
